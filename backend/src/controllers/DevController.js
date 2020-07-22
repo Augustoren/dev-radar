@@ -1,5 +1,6 @@
 const { Dev, validateDev } = require("../models/Dev");
 const axios = require("axios");
+const parseStringAsArray = require("../utils/parseStringAsArray");
 
 module.exports = {
   async index(req, res) {
@@ -13,6 +14,12 @@ module.exports = {
 
     const { github_username, techs, latitude, longitude } = req.body;
 
+    let dev = await Dev.findOne({
+      $or: [{ name: github_username }, { github_username }],
+    });
+
+    if (dev) return res.json(dev);
+
     const response = await axios
       .get(`https://api.github.com/users/${github_username}`)
       .catch((err) => {
@@ -20,12 +27,6 @@ module.exports = {
       });
 
     const { name = login, bio, avatar_url } = response.data;
-
-    let dev = await Dev.findOne({
-      $or: [{ name: github_username }, { github_username }],
-    });
-
-    if (dev) return res.json(dev);
 
     const location = {
       type: "Point",
@@ -36,7 +37,7 @@ module.exports = {
       name,
       github_username,
       bio,
-      techs: techs.split(",").map((tech) => tech.trim()),
+      techs: parseStringAsArray(techs),
       avatar_url,
       location,
     });
