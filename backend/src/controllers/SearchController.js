@@ -6,7 +6,6 @@ module.exports = {
     const { latitude, longitude, techs } = req.query;
 
     const techArray = parseStringAsArray(techs);
-
     const devs = await Dev.find({
       techs: {
         $in: techArray,
